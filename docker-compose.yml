@@ -1,0 +1,50 @@
+version: '3'
+
+networks:
+  vpc:
+    external: true
+  
+services:
+  &rabbitmq-service rabbitmq:
+    hostname: *rabbitmq-service
+    container_name: *rabbitmq-service
+    image: rabbitmq:3.10.7-management
+    networks:
+      vpc:
+#    ports:
+#      - 15672:15672
+#      - 5672:5672
+
+  &app-service app:
+    container_name: *app-service
+    hostname: *app-service
+    depends_on:
+      - rabbitmq
+    image: node:18.13
+    working_dir: /home/node/app
+    volumes:
+      - ./source:/home/node/app
+    restart: always
+    command: "npm run start:prod"
+    labels:
+      traefik.enable: true
+      traefik.backend: style-search
+      traefik.frontend.rule: "Host:style-search.dev-test.pro"
+      traefik.port: 3000
+      traefik.docker.network: vpc
+    networks:
+      vpc:
+
+  &scrapper-service scrapper:
+    hostname: *scrapper-service
+    container_name: *scrapper-service
+    depends_on:
+      - app
+    image: node:18.13
+    working_dir: /home/node/scrapper
+    volumes:
+      - ./source:/home/node/scrapper
+    restart: always
+    command: "npm run start scrapper"
+    networks:
+      vpc:
