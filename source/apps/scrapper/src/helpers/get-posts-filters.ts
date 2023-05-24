@@ -11,7 +11,8 @@ export interface IFilters {
 }
 
 export const getPostsFilters = (filters: IFilters) => {
-  const { hashtags, mentions, keywords, period, likes, postType } = filters;
+  const { hashtags, mentions, keywords, period, likes, postType, engagement } =
+    filters;
 
   const db_filters: any = {};
 
@@ -36,6 +37,10 @@ export const getPostsFilters = (filters: IFilters) => {
     deadline.setDate(deadline.getDate() - period);
 
     db_filters.timestamp = MoreThanOrEqual(deadline);
+  }
+
+  if (engagement) {
+    db_filters.engagement_rate = MoreThanOrEqual(engagement);
   }
 
   return db_filters;

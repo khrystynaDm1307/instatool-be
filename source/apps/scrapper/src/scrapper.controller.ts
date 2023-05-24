@@ -48,7 +48,7 @@ export class ScrapperController {
   async getPosts(filters) {
     try {
       const response = await this.scrapperService.getPosts(filters);
-      return postFilter(response,filters);
+      return response;
     } catch (error) {
       console.log(error);
     }

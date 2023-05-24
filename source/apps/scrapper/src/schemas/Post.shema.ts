@@ -8,6 +8,7 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  AfterLoad,
 } from 'typeorm';
 import { PostOwner } from './PostOwner.shema';
 import { Mention } from './Mention.shema';
@@ -79,6 +80,9 @@ export class Post {
 
   @Column({ nullable: true })
   engagement: number;
+
+  @Column({ nullable: true })
+  engagement_rate: number;
 
   @UpdateDateColumn()
   updated_at: Date;

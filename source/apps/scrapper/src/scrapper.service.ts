@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   Account,
   Hashtag,
@@ -48,21 +48,24 @@ export class ScrapperService {
   }
 
   async getPosts(filters) {
-    const { pageSize, page } = filters;
+    const { pageSize = 10, page = 1 } = filters;
 
     const db_filters = getPostsFilters(filters);
 
     const posts = await this.post.find({
       where: db_filters,
-      relations: {
-        owner: true,
-        hashtags: true,
-        mentions: true,
-      },
-      ...(pageSize ? { take: pageSize } : {take:10000 }),
-      ...(page ? { skip: (page - 1) * pageSize } : {}),
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+      select: { id: true },
     });
 
-    return posts || [];
+    const ids = posts?.map((post) => post.id);
+
+    const fullPosts = await this.post.find({
+      where: { id: In(ids || []) },
+      relations: { owner: true, hashtags: true, mentions: true },
+    });
+
+    return fullPosts || [];
   }
 }
