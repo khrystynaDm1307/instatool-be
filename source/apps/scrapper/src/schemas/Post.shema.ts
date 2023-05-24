@@ -81,6 +81,9 @@ export class Post {
   @Column({ nullable: true })
   engagement: number;
 
+  @Column({ nullable: true, default: false })
+  gcs_picture: boolean;
+  
   @Column({ nullable: true })
   engagement_rate: number;
 

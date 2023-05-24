@@ -52,6 +52,9 @@ export class PostOwner {
   @Column({ nullable: true })
   businessCategoryName: string;
 
+  @Column({ nullable: true, default: false })
+  gcs_picture: boolean;
+  
   @Column({ nullable: true })
   private: boolean;
 
