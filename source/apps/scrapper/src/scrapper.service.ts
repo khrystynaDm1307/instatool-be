@@ -52,10 +52,10 @@ export class ScrapperService {
 
     const db_filters = getPostsFilters(filters);
 
-    const posts = await this.post.find({
+    const [posts, count] = await this.post.findAndCount({
       where: db_filters,
       take: pageSize,
-      skip: (page - 1) * pageSize,
+      skip: page  * pageSize,
       select: { id: true },
     });
 
@@ -66,6 +66,6 @@ export class ScrapperService {
       relations: { owner: true, hashtags: true, mentions: true },
     });
 
-    return fullPosts || [];
+    return { data: fullPosts, count } || [];
   }
 }
