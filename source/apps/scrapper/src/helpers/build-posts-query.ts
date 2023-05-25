@@ -6,7 +6,7 @@ export interface IFilters {
   hashtags?: string[];
   mentions?: string[];
   keywords?: string;
-  engagement?: number;
+  engagement?: string;
   postType?: 'Image' | 'Video' | 'Sidecar';
   username?: string;
   page?: number;
@@ -42,12 +42,6 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
     });
   }
 
-  if (engagement) {
-    queryBuilder.andWhere('post.likesCount / owner.followersCount >= :rate', {
-      rate: engagement,
-    });
-  }
-
   if (postType) {
     queryBuilder.andWhere('post.type = :postType', { postType });
   }
@@ -55,9 +49,10 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
   if (engagement) {
     queryBuilder
       .andWhere('owner.followersCount IS NOT NULL')
+      .andWhere('owner.followersCount > 0')
       .andWhere(
-        '(COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0)) / owner.followers >= engagement',
-        { engagement },
+        '((COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0)) * 100 / COALESCE(owner.followersCount, 1)) >= :engagement',
+        { engagement: +engagement * 100 },
       );
   }
 
