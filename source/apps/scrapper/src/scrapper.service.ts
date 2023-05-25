@@ -100,7 +100,7 @@ export class ScrapperService {
     queryBuilder.skip(pageSize * page);
 
     const filteredPosts = await queryBuilder.getMany();
-    console.log((await this.post.findAndCount())[1]);
+  
     // Get full relations
     const fullPosts = await this.post.find({
       where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
