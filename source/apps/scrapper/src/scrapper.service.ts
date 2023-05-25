@@ -9,8 +9,13 @@ import {
   PostOwner,
   TaggedUser,
 } from './schemas';
-import { getFilters } from './helpers';
-import { IFilters, buildPostsQuery } from './helpers/build-posts-query';
+import {
+  buildInfQuery,
+  filterByLanguage,
+  filterByOverallEng,
+  getOwnerEngagement,
+} from './helpers';
+import { IFilters, buildPostsQuery } from './helpers';
 
 @Injectable()
 export class ScrapperService {
@@ -30,31 +35,59 @@ export class ScrapperService {
   ) {}
 
   async getInfluencers(username: string, filters) {
-    const db_filters = getFilters(filters);
+    const {
+      page = 0,
+      pageSize = 50,
+      language,
+      overallEngagement,
+    } = filters || {};
 
-    const account = await this.account.findOne({
-      where: { username, posts: db_filters },
-      relations: {
-        posts: {
-          owner: true,
-          // hashtags: true,
-          // mentions: true,
-        },
-      },
-    });
+    let queryBuilder = this.postOwner
+      .createQueryBuilder('postOwner')
+      .leftJoinAndSelect('postOwner.posts', 'post')
+      .leftJoin('post.tagged_accounts', 'tagged_account')
+      .leftJoinAndSelect('post.hashtags', 'hashtag')
+      .leftJoinAndSelect('post.mentions', 'mention')
+      .where('tagged_account.username LIKE :username', { username });
 
-    if (!account) return;
-    return account?.posts;
+    queryBuilder = await buildInfQuery(
+      filters,
+      queryBuilder,
+      this.post,
+      this.postOwner,
+    );
+
+    const totalCount = await queryBuilder.getCount();
+
+    // Apply pagination
+    queryBuilder.take(pageSize);
+    queryBuilder.skip(pageSize * page);
+
+    let filteredPosts = await queryBuilder.getMany();
+    filteredPosts = filteredPosts.map((owner) => getOwnerEngagement(owner));
+
+    if (language) {
+      filteredPosts = filterByLanguage(filteredPosts, language);
+    }
+
+    if (overallEngagement) {
+      filteredPosts = filterByOverallEng(filteredPosts, overallEngagement);
+    }
+
+    const count =
+      language || overallEngagement ? filteredPosts?.length : totalCount;
+
+    return { totalCount: count, filteredPosts };
   }
 
   async getPosts(filters: IFilters) {
-    const { page = 0, pageSize = 50 } = filters;
+    const { page = 0, pageSize = 50 } = filters || {};
 
     let queryBuilder = this.post
       .createQueryBuilder('post')
-      .innerJoinAndSelect('post.owner', 'owner')
-      .innerJoin('post.hashtags', 'hashtag')
-      .innerJoin('post.mentions', 'mention');
+      .leftJoinAndSelect('post.owner', 'owner')
+      .leftJoin('post.hashtags', 'hashtag')
+      .leftJoin('post.mentions', 'mention');
 
     // Apply all filters
     queryBuilder = buildPostsQuery(filters, queryBuilder);
@@ -67,16 +100,17 @@ export class ScrapperService {
     queryBuilder.skip(pageSize * page);
 
     const filteredPosts = await queryBuilder.getMany();
-
-    // // Get full relations
-    // const fullPosts = await this.post.find({
-    //   where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
-    //   relations: { hashtags: true, owner: true, mentions: true },
-    // });
+    console.log((await this.post.findAndCount())[1]);
+    // Get full relations
+    const fullPosts = await this.post.find({
+      where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
+      relations: { hashtags: true, owner: true, mentions: true },
+      order: { timestamp: 'DESC' },
+    });
 
     return {
       totalCount,
-      filteredPosts,
+      filteredPosts: fullPosts,
     };
   }
 }
