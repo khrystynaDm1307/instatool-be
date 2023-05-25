@@ -78,14 +78,8 @@ export class Post {
   @Column({ nullable: true })
   isSponsored: boolean;
 
-  @Column({ nullable: true })
-  engagement: number;
-
   @Column({ nullable: true, default: false })
   gcs_picture: boolean;
-  
-  @Column({ nullable: true })
-  engagement_rate: number;
 
   @UpdateDateColumn()
   updated_at: Date;

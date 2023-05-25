@@ -10,7 +10,7 @@ import {
   TaggedUser,
 } from './schemas';
 import { getFilters } from './helpers';
-import { getPostsFilters } from './helpers/get-posts-filters';
+import { IFilters, buildPostsQuery } from './helpers/build-posts-query';
 
 @Injectable()
 export class ScrapperService {
@@ -47,25 +47,36 @@ export class ScrapperService {
     return account?.posts;
   }
 
-  async getPosts(filters) {
-    const { pageSize = 10, page = 1 } = filters;
+  async getPosts(filters: IFilters) {
+    const { page = 0, pageSize = 50 } = filters;
 
-    const db_filters = getPostsFilters(filters);
+    let queryBuilder = this.post
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.owner', 'owner')
+      .innerJoin('post.hashtags', 'hashtag')
+      .innerJoin('post.mentions', 'mention');
 
-    const [posts, count] = await this.post.findAndCount({
-      where: db_filters,
-      take: pageSize,
-      skip: page  * pageSize,
-      select: { id: true },
-    });
+    // Apply all filters
+    queryBuilder = buildPostsQuery(filters, queryBuilder);
 
-    const ids = posts?.map((post) => post.id);
+    // Count the total number of filtered posts
+    const totalCount = await queryBuilder.getCount();
 
+    // Apply pagination
+    queryBuilder.take(pageSize);
+    queryBuilder.skip(pageSize * page);
+
+    const filteredPosts = await queryBuilder.getMany();
+
+    // Get full relations
     const fullPosts = await this.post.find({
-      where: { id: In(ids || []) },
-      relations: { owner: true, hashtags: true, mentions: true },
+      where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
+      relations: { hashtags: true, owner: true, mentions: true },
     });
 
-    return { data: fullPosts, count } || [];
+    return {
+      totalCount,
+      fullPosts,
+    };
   }
 }
