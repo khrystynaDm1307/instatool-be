@@ -19,7 +19,6 @@ export class ScrapperController {
 
       const data = await this.scrapperService.getInfluencers(username, filters);
 
-
       return data;
 
       // return await addPictureUrl(filteredOwners.slice(0, 3));
@@ -45,10 +44,10 @@ export class ScrapperController {
   }
 
   @MessagePattern('get-post-by-id')
-  async getPostById({id}) {
+  async getPostById({ id }) {
     try {
       const response = await this.scrapperService.getPostById(id);
-      return response;
+      return { post: response };
     } catch (error) {
       console.log(error);
     }
