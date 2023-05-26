@@ -14,9 +14,13 @@ export class AppController {
   }
 
   @Get('posts')
-  async getPosts(
-    @Query() query: {},
-  ) {
+  async getPosts(@Query() query: {}) {
     return await this.appService.getPosts(query);
+  }
+
+  @Get('posts/:id')
+  async getPostById(@Param() params: { id: string }) {
+    const { id } = params;
+    return await this.appService.getPostById({ id });
   }
 }

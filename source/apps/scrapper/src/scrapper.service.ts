@@ -100,7 +100,7 @@ export class ScrapperService {
     queryBuilder.skip(pageSize * page);
 
     const filteredPosts = await queryBuilder.getMany();
-  
+
     // Get full relations
     const fullPosts = await this.post.find({
       where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
@@ -112,5 +112,12 @@ export class ScrapperService {
       totalCount,
       filteredPosts: fullPosts,
     };
+  }
+
+  async getPostById(id: string) {
+    return this.post.findOne({
+      where: { id },
+      relations: { tagged_accounts: true, mentions: true, hashtags: true },
+    });
   }
 }

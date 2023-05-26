@@ -15,4 +15,9 @@ export class AppService {
     return this.client.send('get-posts', data);
     // .pipe(catchError((error) => throwError(() => new RpcException(error))));
   }
+
+  async getPostById(data) {
+    return this.client.send('get-post-by-id', data);
+    // .pipe(catchError((error) => throwError(() => new RpcException(error))));
+  }
 }

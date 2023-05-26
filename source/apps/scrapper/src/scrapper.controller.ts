@@ -43,4 +43,14 @@ export class ScrapperController {
       console.log(error);
     }
   }
+
+  @MessagePattern('get-post-by-id')
+  async getPostById({id}) {
+    try {
+      const response = await this.scrapperService.getPostById(id);
+      return response;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
