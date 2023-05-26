@@ -117,7 +117,12 @@ export class ScrapperService {
   async getPostById(id: string) {
     return this.post.findOne({
       where: { id },
-      relations: { tagged_accounts: true, mentions: true, hashtags: true },
+      relations: {
+        tagged_accounts: true,
+        mentions: true,
+        hashtags: true,
+        owner: true,
+      },
     });
   }
 }
