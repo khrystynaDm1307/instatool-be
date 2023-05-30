@@ -1,8 +1,6 @@
 import { omit } from 'lodash';
 import { getOwnerLang } from './get-owner-lang';
 
-
-
 export const filterByLanguage = (owners, language) =>
   owners
     .map((owner) => {
@@ -10,15 +8,13 @@ export const filterByLanguage = (owners, language) =>
     })
     .filter((owner) => owner.language === language);
 
-
 export const getOwnerEngagement = (owner) => {
   let values = 0;
 
   owner.posts.forEach((post) => {
-    if (post.likesCount && post.likesCount > 0) {
-      values += post.likesCount;
-      values += post.commentsCount || 0;
-    }
+    const { likesCount = 0, commentsCount = 0 } = post;
+    values += likesCount ;
+    values += commentsCount;
   });
 
   const owner_engagement = values / (owner.followersCount || 1);
@@ -28,7 +24,6 @@ export const getOwnerEngagement = (owner) => {
     total_engagement: values,
   };
 };
-
 
 export const filterByOverallEng = (owners, overall_engagement) =>
   owners.filter((owner) => owner.overall_engagement > +overall_engagement);

@@ -5,12 +5,9 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get('influencers/:username')
-  async getInfluencers(
-    @Param() params: { username: string },
-    @Query() query: {},
-  ) {
-    return await this.appService.getInfluencers({ ...params, filters: query });
+  @Get('influencers')
+  async getInfluencers(@Query() query: {}) {
+    return await this.appService.getInfluencers(query);
   }
 
   @Get('posts')

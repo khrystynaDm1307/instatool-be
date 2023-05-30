@@ -16,6 +16,7 @@ import {
   getOwnerEngagement,
 } from './helpers';
 import { IFilters, buildPostsQuery } from './helpers';
+import { count } from 'console';
 
 @Injectable()
 export class ScrapperService {
@@ -34,7 +35,7 @@ export class ScrapperService {
     private readonly hashtag: Repository<Hashtag>,
   ) {}
 
-  async getInfluencers(username: string, filters) {
+  async getInfluencers(filters) {
     const {
       page = 0,
       pageSize = 50,
@@ -47,8 +48,7 @@ export class ScrapperService {
       .leftJoinAndSelect('postOwner.posts', 'post')
       .leftJoin('post.tagged_accounts', 'tagged_account')
       .leftJoinAndSelect('post.hashtags', 'hashtag')
-      .leftJoinAndSelect('post.mentions', 'mention')
-      .where('tagged_account.username LIKE :username', { username });
+      .leftJoinAndSelect('post.mentions', 'mention');
 
     queryBuilder = await buildInfQuery(
       filters,
@@ -64,6 +64,7 @@ export class ScrapperService {
     queryBuilder.skip(pageSize * page);
 
     let filteredPosts = await queryBuilder.getMany();
+
     filteredPosts = filteredPosts.map((owner) => getOwnerEngagement(owner));
 
     if (language) {

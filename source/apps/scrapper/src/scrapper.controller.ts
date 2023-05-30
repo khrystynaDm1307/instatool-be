@@ -11,13 +11,9 @@ export class ScrapperController {
   ) {}
 
   @MessagePattern('get-influencers')
-  async getInfluencers(data) {
-    const { username, filters } = data || {};
-
+  async getInfluencers(filters) {
     try {
-      if (!username) throw new BadRequestException('Username is missed');
-
-      const data = await this.scrapperService.getInfluencers(username, filters);
+      const data = await this.scrapperService.getInfluencers(filters);
 
       return data;
 

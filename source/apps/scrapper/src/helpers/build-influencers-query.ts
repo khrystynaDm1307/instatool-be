@@ -1,5 +1,3 @@
-
-
 export interface IIFilters {
   followers_min?: number;
   followers_max?: number;
@@ -13,10 +11,11 @@ export interface IIFilters {
   lastPost?: number;
   engagement?: number;
   language?: string;
-  overall_engagement?: string;
+  overallEngagement?: string;
   postType?: 'Image' | 'Video' | 'Sidecar';
   page?: string;
   pageSize?: string;
+  username?: string;
 }
 
 export const buildInfQuery = (
@@ -38,7 +37,8 @@ export const buildInfQuery = (
     postType,
     lastPost,
     engagement,
-    overall_engagement,
+    overallEngagement,
+    username,
   } = filters;
 
   if (followers_min && followers_max) {
@@ -55,6 +55,12 @@ export const buildInfQuery = (
       queryBuilder.andWhere('postOwner.followersCount <= :max', {
         max: followers_max,
       });
+  }
+
+  if (username) {
+    queryBuilder.andWhere('postOwner.ownerUsername ILIKE :username', {
+      username: `%${username}%`,
+    });
   }
 
   if (bio) {
@@ -85,9 +91,12 @@ export const buildInfQuery = (
   }
 
   if (mentions?.length) {
-    queryBuilder.andWhere('mention.username IN (:...mentions)', {
-      mentions: ['asos'],
-    });
+    queryBuilder.andWhere(
+      'mention.username IN (:...mentions) OR tagged_account.username IN (:...mentions)',
+      {
+        mentions,
+      },
+    );
   }
   if (keyword) {
     queryBuilder.andWhere('post.caption ILIKE :caption', {
@@ -129,8 +138,15 @@ export const buildInfQuery = (
       );
   }
 
-  if (overall_engagement) {
-   
+  if (overallEngagement) {
+    // queryBuilder
+    //   .andWhere('postOwner.followersCount > 0')
+    //   .andWhere('postOwner.followersCount IS NOT NULL')
+    //   .groupBy('postOwner.followersCount, postOwner.ownerUsername')
+    //   .having(
+    //     'SUM(post.likesCount + post.commentsCount) * 100 / COALESCE(postOwner.followersCount, 1) >= :rate',
+    //     { rate: +overallEngagement * 100 },
+    //   );
   }
 
   return queryBuilder;
