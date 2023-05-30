@@ -102,7 +102,7 @@ export class ScrapperService {
   }
 
   async getPosts(filters: IFilters) {
-    const { page = 0, pageSize = 50 } = filters || {};
+    const { page = 0, pageSize = 50, sort = 'likesCount_desc' } = filters || {};
 
     let queryBuilder = this.post
       .createQueryBuilder('post')
@@ -116,6 +116,15 @@ export class ScrapperService {
     // Count the total number of filtered posts
     const totalCount = await queryBuilder.getCount();
 
+    // Apply sorting
+    const [sortField, sortType] = sort.split('_');
+
+    queryBuilder.orderBy(
+      `post.${sortField}`,
+      sortType === 'asc' ? 'ASC' : 'DESC',
+      'NULLS LAST',
+    );
+
     // Apply pagination
     queryBuilder.take(pageSize);
     queryBuilder.skip(pageSize * page);
@@ -126,7 +135,7 @@ export class ScrapperService {
     const fullPosts = await this.post.find({
       where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
       relations: { hashtags: true, owner: true, mentions: true },
-      order: { timestamp: 'DESC' },
+      order: { [sortField]: sortType.toUpperCase() },
     });
 
     return {

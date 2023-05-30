@@ -11,6 +11,7 @@ export interface IFilters {
   username?: string;
   page?: number;
   pageSize?: number;
+  sort?: string;
 }
 
 export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
@@ -43,7 +44,6 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
   }
 
   if (postType) {
-    console.log(postType);
     queryBuilder.andWhere('post.type ILIKE :postType', {
       postType: `%${postType}%`,
     });
