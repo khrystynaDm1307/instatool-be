@@ -39,6 +39,7 @@ export class ScrapperService {
     const {
       page = 0,
       pageSize = 50,
+      sort = 'followersCount_desc',
       language,
       overallEngagement,
     } = filters || {};
@@ -46,7 +47,7 @@ export class ScrapperService {
     let queryBuilder = this.postOwner
       .createQueryBuilder('postOwner')
       .leftJoinAndSelect('postOwner.posts', 'post')
-      .leftJoin('post.tagged_accounts', 'tagged_account')
+      .leftJoinAndSelect('post.tagged_accounts', 'tagged_account')
       .leftJoinAndSelect('post.hashtags', 'hashtag')
       .leftJoinAndSelect('post.mentions', 'mention');
 
@@ -58,6 +59,17 @@ export class ScrapperService {
     );
 
     const totalCount = await queryBuilder.getCount();
+
+    // Apply sorting
+    const [sortField, sortType] = sort.split('_');
+
+    if (sortField.includes('follow')) {
+      queryBuilder.orderBy(
+        `postOwner.${sortField}`,
+        sortType.toUpperCase(),
+        'NULLS LAST',
+      );
+    }
 
     // Apply pagination
     queryBuilder.take(pageSize);
@@ -75,6 +87,14 @@ export class ScrapperService {
       filteredPosts = filterByOverallEng(filteredPosts, overallEngagement);
     }
 
+    if (sortField.includes('engagement')) {
+      filteredPosts = filteredPosts.sort((a: any, b: any) => {
+        return sortType === 'asc'
+          ? a.overall_engagement - b.overall_engagement
+          : b.overall_engagement - a.overall_engagement;
+      });
+    }
+
     const count =
       language || overallEngagement ? filteredPosts?.length : totalCount;
 
@@ -86,7 +106,7 @@ export class ScrapperService {
 
     let queryBuilder = this.post
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.owner', 'owner')
+      .leftJoin('post.owner', 'owner')
       .leftJoin('post.hashtags', 'hashtag')
       .leftJoin('post.mentions', 'mention');
 
