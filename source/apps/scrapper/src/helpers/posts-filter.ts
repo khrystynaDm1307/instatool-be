@@ -12,9 +12,16 @@ export const getOwnerEngagement = (owner) => {
   let values = 0;
 
   owner.posts.forEach((post) => {
-    const { likesCount = 0, commentsCount = 0 } = post;
-    values += likesCount ;
+    const {
+      likesCount = 0,
+      commentsCount = 0,
+      videoPlayCount = 0,
+      videoViewCount = 0,
+    } = post;
+    values += likesCount;
     values += commentsCount;
+    values += videoPlayCount;
+    values += videoViewCount;
   });
 
   const owner_engagement = values / (owner.followersCount || 1);

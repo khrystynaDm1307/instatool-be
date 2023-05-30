@@ -43,8 +43,10 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
   }
 
   if (postType) {
-    console.log(postType)
-    queryBuilder.andWhere('post.type ILIKE :postType', { postType:`%${postType}%` });
+    console.log(postType);
+    queryBuilder.andWhere('post.type ILIKE :postType', {
+      postType: `%${postType}%`,
+    });
   }
 
   if (engagement) {
@@ -52,7 +54,7 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
       .andWhere('owner.followersCount IS NOT NULL')
       .andWhere('owner.followersCount > 0')
       .andWhere(
-        '((COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0)) * 100 / COALESCE(owner.followersCount, 1)) >= :engagement',
+        '((COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0)) * 100 / COALESCE(owner.followersCount, 1)) >= :engagement',
         { engagement: +engagement * 100 },
       );
   }
@@ -76,13 +78,13 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
 
   // Calculate engagement field
   queryBuilder.addSelect(
-    'COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0)',
+    'COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0)',
     'engagement',
   );
 
   // Calculate rate field
   queryBuilder.addSelect(
-    '(CASE WHEN owner.followersCount > 0 THEN COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) / owner.followersCount ELSE 0 END)',
+    '(CASE WHEN owner.followersCount > 0 THEN COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0) / owner.followersCount ELSE 0 END)',
     'engagement_rate',
   );
 
