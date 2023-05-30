@@ -43,7 +43,8 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
   }
 
   if (postType) {
-    queryBuilder.andWhere('post.type = :postType', { postType });
+    console.log(postType)
+    queryBuilder.andWhere('post.type ILIKE :postType', { postType:`%${postType}%` });
   }
 
   if (engagement) {
