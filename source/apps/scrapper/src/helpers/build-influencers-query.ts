@@ -6,7 +6,7 @@ export interface IIFilters {
   contacts?: boolean;
   hashtags?: string[];
   mentions?: string[];
-  keyword?: string;
+  keywords?: string;
   isBusinessAccount?: boolean;
   lastPost?: number;
   engagement?: number;
@@ -32,7 +32,7 @@ export const buildInfQuery = (
     contacts,
     hashtags,
     mentions,
-    keyword,
+    keywords,
     isBusinessAccount,
     postType,
     lastPost,
@@ -98,9 +98,10 @@ export const buildInfQuery = (
       },
     );
   }
-  if (keyword) {
+
+  if (keywords) {
     queryBuilder.andWhere('post.caption ILIKE :caption', {
-      caption: `%${keyword}%`,
+      caption: `%${keywords}%`,
     });
   }
   if (postType) {
