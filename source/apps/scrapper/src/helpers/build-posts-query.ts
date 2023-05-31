@@ -84,7 +84,7 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
 
   // Calculate rate field
   queryBuilder.addSelect(
-    '(CASE WHEN owner.followersCount > 0 THEN (COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0)) / owner.followersCount ELSE 0 END)',
+    '(CASE WHEN owner.followersCount > 0 THEN (COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0)) * 1000 / owner.followersCount ELSE 0 END)',
     'engagement_rate',
   );
 
