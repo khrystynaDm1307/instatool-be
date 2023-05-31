@@ -10,6 +10,7 @@ export const filterByLanguage = (owners, language) =>
 
 export const getOwnerEngagement = (owner) => {
   let values = 0;
+  const { followersCount } = owner;
 
   owner.posts.forEach((post) => {
     const {
@@ -24,7 +25,8 @@ export const getOwnerEngagement = (owner) => {
     values += videoViewCount;
   });
 
-  const owner_engagement = values / (owner.followersCount || 1);
+  const owner_engagement = values * 1000 / (followersCount || 1);
+
   return {
     ...owner,
     overall_engagement: owner_engagement,

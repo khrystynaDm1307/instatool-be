@@ -18,6 +18,7 @@ import {
 } from './helpers';
 import { IFilters, buildPostsQuery } from './helpers';
 import { count } from 'console';
+import { concatAll, distinct } from 'rxjs';
 
 @Injectable()
 export class ScrapperService {
@@ -47,10 +48,10 @@ export class ScrapperService {
 
     let queryBuilder = this.postOwner
       .createQueryBuilder('postOwner')
-      .leftJoinAndSelect('postOwner.posts', 'post')
-      .leftJoinAndSelect('post.tagged_accounts', 'tagged_account')
-      .leftJoinAndSelect('post.hashtags', 'hashtag')
-      .leftJoinAndSelect('post.mentions', 'mention');
+      .leftJoin('postOwner.posts', 'post')
+      .leftJoin('post.tagged_accounts', 'tagged_account')
+      .leftJoin('post.hashtags', 'hashtag')
+      .leftJoin('post.mentions', 'mention');
 
     queryBuilder = await buildInfQuery(
       filters,
@@ -64,13 +65,7 @@ export class ScrapperService {
     // Apply sorting
     const [sortField, sortType] = sort.split('_');
 
-    if (sortField.includes('follow')) {
-      queryBuilder.orderBy(
-        `postOwner.${sortField}`,
-        sortType.toUpperCase(),
-        'NULLS LAST',
-      );
-    }
+    queryBuilder.orderBy(`engagement_rate`, 'DESC', 'NULLS LAST');
 
     // Apply pagination
     queryBuilder.take(pageSize);
@@ -78,28 +73,38 @@ export class ScrapperService {
 
     let filteredPosts = await queryBuilder.getMany();
 
-    filteredPosts = filteredPosts.map((owner) => getOwnerEngagement(owner));
-
     if (language) {
       filteredPosts = filterByLanguage(filteredPosts, language);
     }
 
-    if (overallEngagement) {
-      filteredPosts = filterByOverallEng(filteredPosts, overallEngagement);
-    }
+    const ownersIds = filteredPosts.map((owner) => owner.ownerUsername);
+    
+    const posts = await queryBuilder
+      .andWhere('postOwner.ownerUsername IN (:...ownersIds)', { ownersIds })
+      .getRawMany();
 
-    if (sortField.includes('engagement')) {
-      filteredPosts = filteredPosts.sort((a: any, b: any) => {
-        return sortType === 'asc'
-          ? a.overall_engagement - b.overall_engagement
-          : b.overall_engagement - a.overall_engagement;
-      });
-    }
+    let fullPosts = await this.postOwner.find({
+      where: { ownerUsername: In(ownersIds) },
+      relations: {
+        posts: true,
+      },
+    });
 
     const count =
       language || overallEngagement ? filteredPosts?.length : totalCount;
 
-    return { totalCount: count, filteredPosts };
+    const response = posts.map((post) => {
+      const data = fullPosts.find(
+        (p) => post.postOwner_ownerUsername === p.ownerUsername,
+      );
+      const overall_engagement = post.engagement_rate;
+      return { ...data, overall_engagement };
+    });
+
+    return {
+      totalCount: count,
+      filteredPosts: response,
+    };
   }
 
   async getPosts(filters: IFilters) {
@@ -133,7 +138,6 @@ export class ScrapperService {
     // Apply pagination
     queryBuilder.take(pageSize);
     queryBuilder.skip(pageSize * page);
-
 
     // Get missing relations
     const filteredPosts = await queryBuilder.getMany();

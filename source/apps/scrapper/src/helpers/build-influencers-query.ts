@@ -140,15 +140,17 @@ export const buildInfQuery = (
   }
 
   if (overallEngagement) {
-    // queryBuilder
-    //   .andWhere('postOwner.followersCount > 0')
-    //   .andWhere('postOwner.followersCount IS NOT NULL')
-    //   .groupBy('postOwner.followersCount, postOwner.ownerUsername')
-    //   .having(
-    //     'SUM(post.likesCount + post.commentsCount) * 100 / COALESCE(postOwner.followersCount, 1) >= :rate',
-    //     { rate: +overallEngagement * 100 },
-    //   );
   }
+
+  const sum =
+    'SUM(post.likesCount + post.commentsCount + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0))';
+
+  queryBuilder
+    .addSelect(
+      `CAST ((${sum} * 1000 / COALESCE(NULLIF(postOwner.followersCount, 0), 1)) AS INT)`,
+      'engagement_rate',
+    )
+    .groupBy('postOwner.ownerUsername');
 
   return queryBuilder;
 };

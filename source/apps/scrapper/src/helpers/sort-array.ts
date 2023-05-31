@@ -1,6 +1,6 @@
 export const sortArrayByOrder = (arr1, arr2) => {
     const idMap = arr1.reduce((map, item, index) => {
-      map[item.id] = index;
+      map[item] = index;
       return map;
     }, {});
   
