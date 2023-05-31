@@ -134,40 +134,15 @@ export class ScrapperService {
     queryBuilder.take(pageSize);
     queryBuilder.skip(pageSize * page);
 
+
+    // Get missing relations
     const filteredPosts = await queryBuilder.getMany();
     const filteredPostsIds = filteredPosts.map((post) => post.shortCode);
 
-    let fullPosts = await this.post
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.owner', 'owner')
-      .leftJoinAndSelect('post.hashtags', 'hashtag')
-      .leftJoinAndSelect('post.mentions', 'mention')
-      .andWhere('post.shortCode IN (:...filteredPostsIds)', {
-        filteredPostsIds,
-      })
-      .distinct(true)
-      .getMany();
-
-    // fullPosts = fullPosts.map((post) => {
-    //   const {
-    //     likesCount,
-    //     commentsCount,
-    //     videoPlayCount = 0,
-    //     videoViewCount = 0,
-    //     owner,
-    //   } = post;
-    //   const engagement =
-    //     likesCount + commentsCount + videoPlayCount + videoViewCount;
-    //   if (!owner?.followersCount) {
-    //     return { ...post, engagement, engagement_rate: 0 };
-    //   }
-    //   const engagement_rate = engagement / owner?.followersCount;
-    //   return {
-    //     ...post,
-    //     engagement,
-    //     engagement_rate,
-    //   };
-    // });
+    let fullPosts = await this.post.find({
+      where: { shortCode: In(filteredPostsIds) },
+      relations: { owner: true, hashtags: true, mentions: true },
+    });
 
     return {
       totalCount,
