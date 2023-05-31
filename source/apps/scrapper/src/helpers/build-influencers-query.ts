@@ -134,24 +134,25 @@ export const buildInfQuery = (
       .andWhere('postOwner.followersCount > 0')
       .andWhere('postOwner.followersCount IS NOT NULL')
       .andWhere(
-        '((COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0)) * 100 / COALESCE(postOwner.followersCount, 1)) >= :engagement',
+        '((COALESCE(post.likesCount, 0) + COALESCE(post.commentsCount, 0) + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0)) * 100 / COALESCE(postOwner.followersCount, 1)) >= :engagement',
         { engagement: +engagement * 100 },
       );
   }
 
-  if (overallEngagement) {
-  }
+  const sum =
+    'SUM(post.likesCount + post.commentsCount + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0))';
 
   if (withEng) {
-    const sum =
-      'SUM(post.likesCount + post.commentsCount + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0))';
-
     queryBuilder
       .addSelect(
         `CAST ((${sum} * 1000 / COALESCE(NULLIF(postOwner.followersCount, 0), 1)) AS INT)`,
         'engagement_rate',
       )
       .groupBy('postOwner.ownerUsername');
+  }
+
+  if (overallEngagement && withEng) {
+   
   }
 
   return queryBuilder;
