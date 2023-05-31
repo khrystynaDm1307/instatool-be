@@ -56,16 +56,30 @@ export class ScrapperService {
     queryBuilder = await buildInfQuery(
       filters,
       queryBuilder,
-      this.post,
       this.postOwner,
+      true,
+    );
+
+    let queryBuilder2 = this.postOwner
+      .createQueryBuilder('postOwner')
+      .leftJoinAndSelect('postOwner.posts', 'post')
+      .leftJoin('post.tagged_accounts', 'tagged_account')
+      .leftJoin('post.hashtags', 'hashtag')
+      .leftJoin('post.mentions', 'mention');
+
+    queryBuilder2 = await buildInfQuery(
+      filters,
+      queryBuilder2,
+      this.postOwner,
+      false,
     );
 
     const totalCount = await queryBuilder.getCount();
 
     // Apply sorting
-    const [sortField, sortType] = sort.split('_');
+    const [sortField, sortType] = sort.split('-');
 
-    queryBuilder.orderBy(`engagement_rate`, 'DESC', 'NULLS LAST');
+    queryBuilder.orderBy(sortField, sortType.toUpperCase(), 'NULLS LAST');
 
     // Apply pagination
     queryBuilder.take(pageSize);
@@ -78,17 +92,14 @@ export class ScrapperService {
     }
 
     const ownersIds = filteredPosts.map((owner) => owner.ownerUsername);
-    
+
     const posts = await queryBuilder
       .andWhere('postOwner.ownerUsername IN (:...ownersIds)', { ownersIds })
       .getRawMany();
 
-    let fullPosts = await this.postOwner.find({
-      where: { ownerUsername: In(ownersIds) },
-      relations: {
-        posts: true,
-      },
-    });
+    let fullPosts = await queryBuilder2
+      .andWhere('postOwner.ownerUsername IN (:...ownersIds)', { ownersIds })
+      .getMany();
 
     const count =
       language || overallEngagement ? filteredPosts?.length : totalCount;

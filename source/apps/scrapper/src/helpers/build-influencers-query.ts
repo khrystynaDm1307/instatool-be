@@ -21,8 +21,8 @@ export interface IIFilters {
 export const buildInfQuery = (
   filters: IIFilters,
   queryBuilder,
-  postRepository,
   postOwnerRepository,
+  withEng,
 ) => {
   const {
     followers_min,
@@ -142,15 +142,17 @@ export const buildInfQuery = (
   if (overallEngagement) {
   }
 
-  const sum =
-    'SUM(post.likesCount + post.commentsCount + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0))';
+  if (withEng) {
+    const sum =
+      'SUM(post.likesCount + post.commentsCount + COALESCE(post.videoViewCount, 0) + COALESCE(post.videoPlayCount, 0))';
 
-  queryBuilder
-    .addSelect(
-      `CAST ((${sum} * 1000 / COALESCE(NULLIF(postOwner.followersCount, 0), 1)) AS INT)`,
-      'engagement_rate',
-    )
-    .groupBy('postOwner.ownerUsername');
+    queryBuilder
+      .addSelect(
+        `CAST ((${sum} * 1000 / COALESCE(NULLIF(postOwner.followersCount, 0), 1)) AS INT)`,
+        'engagement_rate',
+      )
+      .groupBy('postOwner.ownerUsername');
+  }
 
   return queryBuilder;
 };
