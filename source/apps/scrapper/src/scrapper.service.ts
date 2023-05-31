@@ -14,6 +14,7 @@ import {
   filterByLanguage,
   filterByOverallEng,
   getOwnerEngagement,
+  sortArrayByOrder,
 } from './helpers';
 import { IFilters, buildPostsQuery } from './helpers';
 import { count } from 'console';
@@ -102,7 +103,11 @@ export class ScrapperService {
   }
 
   async getPosts(filters: IFilters) {
-    const { page = 0, pageSize = 50, sort = 'likesCount_desc' } = filters || {};
+    const {
+      page = 0,
+      pageSize = 50,
+      sort = 'post.likesCount-desc',
+    } = filters || {};
 
     let queryBuilder = this.post
       .createQueryBuilder('post')
@@ -117,10 +122,10 @@ export class ScrapperService {
     const totalCount = await queryBuilder.getCount();
 
     // Apply sorting
-    const [sortField, sortType] = sort.split('_');
+    const [sortField, sortType] = sort.split('-');
 
     queryBuilder.orderBy(
-      `post.${sortField}`,
+      sortField,
       sortType === 'asc' ? 'ASC' : 'DESC',
       'NULLS LAST',
     );
@@ -130,17 +135,43 @@ export class ScrapperService {
     queryBuilder.skip(pageSize * page);
 
     const filteredPosts = await queryBuilder.getMany();
+    const filteredPostsIds = filteredPosts.map((post) => post.shortCode);
 
-    // Get full relations
-    const fullPosts = await this.post.find({
-      where: { shortCode: In(filteredPosts?.map((post) => post.shortCode)) },
-      relations: { hashtags: true, owner: true, mentions: true },
-      order: { [sortField]: sortType.toUpperCase() },
-    });
+    let fullPosts = await this.post
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.owner', 'owner')
+      .leftJoinAndSelect('post.hashtags', 'hashtag')
+      .leftJoinAndSelect('post.mentions', 'mention')
+      .andWhere('post.shortCode IN (:...filteredPostsIds)', {
+        filteredPostsIds,
+      })
+      .distinct(true)
+      .getMany();
+
+    // fullPosts = fullPosts.map((post) => {
+    //   const {
+    //     likesCount,
+    //     commentsCount,
+    //     videoPlayCount = 0,
+    //     videoViewCount = 0,
+    //     owner,
+    //   } = post;
+    //   const engagement =
+    //     likesCount + commentsCount + videoPlayCount + videoViewCount;
+    //   if (!owner?.followersCount) {
+    //     return { ...post, engagement, engagement_rate: 0 };
+    //   }
+    //   const engagement_rate = engagement / owner?.followersCount;
+    //   return {
+    //     ...post,
+    //     engagement,
+    //     engagement_rate,
+    //   };
+    // });
 
     return {
       totalCount,
-      filteredPosts: fullPosts,
+      filteredPosts: sortArrayByOrder(filteredPosts, fullPosts),
     };
   }
 
