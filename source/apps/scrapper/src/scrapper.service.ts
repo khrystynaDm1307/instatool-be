@@ -104,13 +104,20 @@ export class ScrapperService {
     const count =
       language || overallEngagement ? filteredPosts?.length : totalCount;
 
-    const response = posts.map((post) => {
+    let response = posts.map((post) => {
       const data = fullPosts.find(
         (p) => post.postOwner_ownerUsername === p.ownerUsername,
       );
       const overall_engagement = post.engagement_rate;
       return { ...data, overall_engagement };
     });
+
+    if (overallEngagement) {
+      response = response.filter((res) => {
+        console.log(res.overall_engagement > +overallEngagement);
+        return res.overall_engagement > +overallEngagement * 1000;
+      });
+    }
 
     return {
       totalCount: count,
