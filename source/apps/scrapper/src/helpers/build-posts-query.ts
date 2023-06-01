@@ -12,6 +12,7 @@ export interface IFilters {
   page?: number;
   pageSize?: number;
   sort?: string;
+  selectedLocations?: string[];
 }
 
 export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
@@ -24,6 +25,7 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
     postType,
     engagement,
     username,
+    selectedLocations,
   } = filters;
 
   if (likes) {
@@ -31,9 +33,14 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
   }
 
   if (keywords) {
-    console.log(keywords);
     queryBuilder.andWhere('post.caption ILIKE :keywords', {
       keywords: `%${keywords}%`,
+    });
+  }
+
+  if (selectedLocations?.length) {
+    queryBuilder.andWhere('post.locationName ILIKE ANY(:searchStrings)', {
+      searchStrings: selectedLocations.map((str) => `%${str}%`),
     });
   }
 
