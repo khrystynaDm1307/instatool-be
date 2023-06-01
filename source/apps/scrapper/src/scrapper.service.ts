@@ -11,6 +11,7 @@ import {
 } from './schemas';
 import {
   buildInfQuery,
+  calculateTotalMetrics,
   filterByLanguage,
   filterByOverallEng,
   getOwnerEngagement,
@@ -135,6 +136,7 @@ export class ScrapperService {
     let queryBuilder = this.post
       .createQueryBuilder('post')
       .leftJoin('post.owner', 'owner')
+      .leftJoin('post.tagged_accounts', 'tagged_account')
       .leftJoin('post.hashtags', 'hashtag')
       .leftJoin('post.mentions', 'mention');
 
@@ -163,7 +165,12 @@ export class ScrapperService {
 
     let fullPosts = await this.post.find({
       where: { shortCode: In(filteredPostsIds) },
-      relations: { owner: true, hashtags: true, mentions: true },
+      relations: {
+        owner: true,
+        hashtags: true,
+        mentions: true,
+        tagged_accounts: true,
+      },
     });
 
     return {
@@ -182,5 +189,18 @@ export class ScrapperService {
         owner: true,
       },
     });
+  }
+
+  async getInfluencerById(username: string) {
+    const user = await this.postOwner.findOne({
+      where: { ownerUsername: username },
+      relations: {
+        posts: { hashtags: true, mentions: true, tagged_accounts: true },
+      },
+    });
+
+    if (!user) return;
+
+    return calculateTotalMetrics(user);
   }
 }

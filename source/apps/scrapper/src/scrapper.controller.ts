@@ -29,6 +29,17 @@ export class ScrapperController {
     }
   }
 
+  @MessagePattern('get-influencers-by-id')
+  async getInfluencerById({ username }) {
+    try {
+      const data = await this.scrapperService.getInfluencerById(username);
+
+      return { influencer: data };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   @MessagePattern('get-posts')
   async getPosts(filters) {
     try {

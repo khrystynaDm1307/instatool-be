@@ -10,6 +10,12 @@ export class AppController {
     return await this.appService.getInfluencers(query);
   }
 
+  @Get('influencers/:username')
+  async getInfluencerById(@Param() params: { username: string }) {
+    const { username } = params;
+    return await this.appService.getInfluencerById({ username });
+  }
+
   @Get('posts')
   async getPosts(@Query() query: {}) {
     return await this.appService.getPosts(query);

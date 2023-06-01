@@ -81,6 +81,9 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
     queryBuilder.andWhere('mention.username IN (:...mentionNames)', {
       mentionNames: mentions,
     });
+    queryBuilder.orWhere('tagged_account.username IN (:...mentionNames)', {
+      mentionNames: mentions,
+    });
   }
 
   // Calculate engagement field
