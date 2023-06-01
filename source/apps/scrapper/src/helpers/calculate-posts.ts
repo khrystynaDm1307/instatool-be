@@ -1,9 +1,15 @@
+import LanguageDetect from 'languagedetect';
+
+const lngDetector = new LanguageDetect();
+lngDetector.setLanguageType('iso2');
+
 export function calculateTotalMetrics(user) {
   let totalLikes = 0;
   let totalComments = 0;
   let videoViews = 0;
   let videoPlays = 0;
   let posts = [];
+  let language;
 
   if (user.posts && user.posts.length > 0) {
     posts = user.posts.map((post) => {
@@ -23,7 +29,15 @@ export function calculateTotalMetrics(user) {
       videoPlays += videoPlayCount;
       videoViews += videoViewCount;
 
-      return { ...post, eng_rate };
+      if (post.caption) {
+        const lang = lngDetector.detect(post.caption, 1);
+
+        if (lang?.length) {
+          language = lang[0][0];
+        }
+      }
+
+      return { ...post, eng_rate, language };
     });
   }
 
