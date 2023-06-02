@@ -175,7 +175,9 @@ export class ScrapperService {
 
     return {
       totalCount,
-      filteredPosts: sortArrayByOrder(filteredPosts, fullPosts),
+      filteredPosts: filteredPosts.map((post) =>
+        fullPosts.find((p) => p.shortCode === post.shortCode),
+      ),
     };
   }
 
