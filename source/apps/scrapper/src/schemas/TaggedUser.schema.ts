@@ -1,6 +1,5 @@
 import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from 'typeorm';
 import { Post } from './Post.shema';
-import { OwnerPost } from './OwnerPost.shema';
 
 @Entity()
 export class TaggedUser {
@@ -25,9 +24,4 @@ export class TaggedUser {
   @JoinTable()
   posts: Post[];
 
-  @ManyToMany(() => OwnerPost, (post) => post.tagged_users, {
-    cascade: true,
-  })
-  @JoinTable()
-  all_posts: OwnerPost[];
 }

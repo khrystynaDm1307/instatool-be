@@ -72,13 +72,13 @@ export const buildPostsQuery = (filters: IFilters, queryBuilder) => {
   }
 
   if (hashtags && hashtags?.length) {
-    queryBuilder.andWhere('hashtag.name IN (:...hashtagNames)', {
+    queryBuilder.andWhere('hashtag.id IN (:...hashtagNames)', {
       hashtagNames: hashtags,
     });
   }
 
   if (mentions && mentions?.length) {
-    queryBuilder.andWhere('mention.username IN (:...mentionNames)', {
+    queryBuilder.andWhere('mention.id IN (:...mentionNames)', {
       mentionNames: mentions,
     });
     queryBuilder.orWhere('tagged_account.username IN (:...mentionNames)', {

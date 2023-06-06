@@ -85,14 +85,14 @@ export const buildInfQuery = (
   }
 
   if (hashtags?.length) {
-    queryBuilder.andWhere('hashtag.name IN (:...hashtagNames)', {
+    queryBuilder.andWhere('hashtag.id IN (:...hashtagNames)', {
       hashtagNames: hashtags,
     });
   }
 
   if (mentions?.length) {
     queryBuilder.andWhere(
-      'mention.username IN (:...mentions) OR tagged_account.username IN (:...mentions)',
+      'mention.id IN (:...mentions) OR tagged_account.username IN (:...mentions)',
       {
         mentions,
       },

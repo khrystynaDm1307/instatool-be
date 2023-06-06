@@ -16,6 +16,7 @@ import { Mention } from './Mention.shema';
 import { Hashtag } from './Hashtag.shema';
 import { TaggedUser } from './TaggedUser.schema';
 import { Account } from './Account.schema';
+import { PostStatistic } from './PostStatistic';
 
 @Entity()
 export class Post {
@@ -61,19 +62,19 @@ export class Post {
   @Column({ nullable: true })
   dimensionsWidth: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   commentsCount: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   likesCount: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   videoViewCount: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   videoPlayCount: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   videoDuration: string;
 
   @Column({ nullable: true })
@@ -82,18 +83,8 @@ export class Post {
   @Column({ nullable: true, default: false })
   gcs_picture: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'decimal' })
   engagement_rate: number;
-
-  @AfterLoad()
-  @AfterUpdate()
-  updateEng() {
-    this.engagement =
-      (this.likesCount || 0) +
-      (this.commentsCount || 0) +
-      (this.videoPlayCount || 0) +
-      (this.videoViewCount || 0);
-  }
 
   @Column({ nullable: true })
   isSponsored: boolean;
@@ -124,4 +115,7 @@ export class Post {
   @ManyToMany(() => TaggedUser, (user) => user.posts)
   @JoinTable()
   tagged_users: TaggedUser[];
+
+  @OneToMany(() => PostStatistic, (st) => st.post)
+  statistics: PostStatistic[];
 }

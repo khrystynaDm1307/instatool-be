@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { OwnerPost } from './OwnerPost.shema';
+import { Post } from './Post.shema';
 
 @Entity()
 export class PostStatistic {
@@ -24,6 +24,6 @@ export class PostStatistic {
   @Column({ default: 0.0, type: 'decimal' })
   engagement_rate: number;
 
-  @ManyToOne(() => OwnerPost, (post) => post.statics)
-  post: OwnerPost;
+  @ManyToOne(() => Post, (post) => post.statistics)
+  post: Post;
 }

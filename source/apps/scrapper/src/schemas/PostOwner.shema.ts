@@ -7,7 +7,6 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Post } from './Post.shema';
-import { OwnerPost } from './OwnerPost.shema';
 import { ProfileStatistic } from './ProfileStatistic.shema';
 
 @Entity()
@@ -94,8 +93,4 @@ export class PostOwner {
   })
   statistic: ProfileStatistic[];
 
-  @OneToMany(() => Post, (post) => post.owner, {
-    cascade: true,
-  })
-  all_posts: OwnerPost[];
 }
