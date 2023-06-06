@@ -16,9 +16,10 @@ import { Mention } from './Mention.shema';
 import { Hashtag } from './Hashtag.shema';
 import { TaggedUser } from './TaggedUser.schema';
 import { Account } from './Account.schema';
+import { PostStatistic } from './PostStatistic';
 
 @Entity()
-export class Post {
+export class OwnerPost {
   @PrimaryColumn()
   shortCode: string;
 
@@ -82,18 +83,8 @@ export class Post {
   @Column({ nullable: true, default: false })
   gcs_picture: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'decimal'})
   engagement_rate: number;
-
-  @AfterLoad()
-  @AfterUpdate()
-  updateEng() {
-    this.engagement =
-      (this.likesCount || 0) +
-      (this.commentsCount || 0) +
-      (this.videoPlayCount || 0) +
-      (this.videoViewCount || 0);
-  }
 
   @Column({ nullable: true })
   isSponsored: boolean;
@@ -104,24 +95,26 @@ export class Post {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToMany(() => Account, (account) => account.posts, {
-    cascade: true,
-  })
   @JoinTable()
   tagged_accounts: Account[];
 
-  @ManyToOne(() => PostOwner, (user) => user.posts)
+  @ManyToOne(() => PostOwner, (user) => user.all_posts)
   owner: PostOwner;
 
-  @ManyToMany(() => Mention, (mention) => mention.posts)
+  @ManyToMany(() => Mention, (mention) => mention.all_posts)
   @JoinTable()
   mentions: Mention[];
 
-  @ManyToMany(() => Hashtag, (hashtag) => hashtag.posts)
+  @ManyToMany(() => Hashtag, (hashtag) => hashtag.all_posts)
   @JoinTable()
   hashtags: Hashtag[];
 
-  @ManyToMany(() => TaggedUser, (user) => user.posts)
+  @ManyToMany(() => TaggedUser, (user) => user.all_posts)
   @JoinTable()
   tagged_users: TaggedUser[];
+
+  @OneToMany(() => PostStatistic, (statics) => statics.post, {
+    cascade: true,
+  })
+  statics: PostStatistic[];
 }

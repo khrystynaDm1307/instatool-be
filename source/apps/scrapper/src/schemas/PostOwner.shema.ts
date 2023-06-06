@@ -7,6 +7,8 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Post } from './Post.shema';
+import { OwnerPost } from './OwnerPost.shema';
+import { ProfileStatistic } from './ProfileStatistic.shema';
 
 @Entity()
 export class PostOwner {
@@ -46,15 +48,15 @@ export class PostOwner {
   @Column({ nullable: true })
   isBusinessAccount: boolean;
 
+  @Column({ nullable: true, default: false })
+  gcs_picture: boolean;
+
   @Column({ nullable: true })
   joinedRecently: boolean;
 
   @Column({ nullable: true })
   businessCategoryName: string;
 
-  @Column({ nullable: true, default: false })
-  gcs_picture: boolean;
-  
   @Column({ nullable: true })
   private: boolean;
 
@@ -86,4 +88,14 @@ export class PostOwner {
     cascade: true,
   })
   posts: Post[];
+
+  @OneToMany(() => ProfileStatistic, (statics) => statics.owner, {
+    cascade: true,
+  })
+  statistic: ProfileStatistic[];
+
+  @OneToMany(() => Post, (post) => post.owner, {
+    cascade: true,
+  })
+  all_posts: OwnerPost[];
 }
