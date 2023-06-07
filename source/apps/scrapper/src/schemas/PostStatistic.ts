@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Post } from './Post.shema';
 
 @Entity()
@@ -21,7 +21,13 @@ export class PostStatistic {
   @Column({ default: 0 })
   engagement: number;
 
-  @Column({ default: 0.0, type: 'decimal' })
+  @UpdateDateColumn()
+  updated_at: Date;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @Column({ default: 0.0, type: 'decimal', nullable: true })
   engagement_rate: number;
 
   @ManyToOne(() => Post, (post) => post.statistics)

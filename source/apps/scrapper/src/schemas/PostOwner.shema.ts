@@ -9,6 +9,18 @@ import {
 import { Post } from './Post.shema';
 import { ProfileStatistic } from './ProfileStatistic.shema';
 
+class ColumnIntNumberTransformer {
+  public to(data: number): number {
+    return data;
+  }
+
+  public from(data: string): number {
+    if (!data===null) return null;
+
+    return parseInt(data);
+  }
+}
+
 @Entity()
 export class PostOwner {
   @PrimaryColumn()
@@ -73,6 +85,13 @@ export class PostOwner {
 
   @Column({ nullable: true })
   postsCount: number;
+
+  @Column({
+    nullable: true,
+    type: 'bigint',
+    transformer: new ColumnIntNumberTransformer(),
+  })
+  engagement: number;
 
   @Column({ nullable: true, default: false })
   updated: boolean;

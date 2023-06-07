@@ -8,8 +8,6 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
-  AfterLoad,
-  AfterUpdate,
 } from 'typeorm';
 import { PostOwner } from './PostOwner.shema';
 import { Mention } from './Mention.shema';
@@ -17,6 +15,30 @@ import { Hashtag } from './Hashtag.shema';
 import { TaggedUser } from './TaggedUser.schema';
 import { Account } from './Account.schema';
 import { PostStatistic } from './PostStatistic';
+
+ export class ColumnIntNumberTransformer {
+  public to(data: number): number {
+    return data;
+  }
+
+  public from(data: string): number {
+    if (!Boolean(data)) return 0;
+
+    return parseInt(data);
+  }
+}
+
+export class ColumnFloatNumberTransformer {
+  public to(data: number): number {
+    return data;
+  }
+
+  public from(data: string): number {
+    if (data === null) return null;
+
+    return parseFloat(data);
+  }
+}
 
 @Entity()
 export class Post {
@@ -62,28 +84,51 @@ export class Post {
   @Column({ nullable: true })
   dimensionsWidth: number;
 
-  @Column({ nullable: true, type: 'bigint' })
+  @Column({ nullable: true })
   commentsCount: number;
 
-  @Column({ nullable: true, type: 'bigint' })
+  @Column({
+    nullable: true,
+    type: 'bigint',
+    transformer: new ColumnIntNumberTransformer(),
+  })
   likesCount: number;
 
-  @Column({ nullable: true, type: 'bigint' })
+  @Column({
+    nullable: true,
+    type: 'bigint',
+    transformer: new ColumnIntNumberTransformer(),
+  })
   videoViewCount: number;
 
-  @Column({ nullable: true, type: 'bigint' })
+  @Column({
+    nullable: true,
+    type: 'bigint',
+    transformer: new ColumnIntNumberTransformer(),
+  })
   videoPlayCount: number;
 
-  @Column({ nullable: true, type: 'bigint' })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+  })
   videoDuration: string;
 
-  @Column({ nullable: true })
+  @Column({
+    nullable: true,
+    type: 'bigint',
+    transformer: new ColumnIntNumberTransformer(),
+  })
   engagement: number;
 
   @Column({ nullable: true, default: false })
   gcs_picture: boolean;
 
-  @Column({ nullable: true, type: 'decimal' })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    transformer: new ColumnFloatNumberTransformer(),
+  })
   engagement_rate: number;
 
   @Column({ nullable: true })
