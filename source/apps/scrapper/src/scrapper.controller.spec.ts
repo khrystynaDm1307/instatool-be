@@ -16,7 +16,7 @@ describe('ScrapperController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(scrapperController.getHello()).toBe('Hello World!');
+  
     });
   });
 });

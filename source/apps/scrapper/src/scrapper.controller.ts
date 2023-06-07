@@ -16,14 +16,6 @@ export class ScrapperController {
       const data = await this.scrapperService.getInfluencers(filters);
 
       return data;
-
-      // return await addPictureUrl(filteredOwners.slice(0, 3));
-
-      //if (data?.length) return data;
-
-      //   const response = await this.apifyService.getInfluencers(username);
-
-      //return response.data;
     } catch (error) {
       console.log(error);
     }

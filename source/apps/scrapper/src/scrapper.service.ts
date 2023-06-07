@@ -44,7 +44,6 @@ export class ScrapperService {
       pageSize = 50,
       sort = 'followersCount_desc',
       language,
-      overallEngagement,
     } = filters || {};
 
     let queryBuilder = this.postOwner
@@ -61,20 +60,6 @@ export class ScrapperService {
       true,
     );
 
-    let queryBuilder2 = this.postOwner
-      .createQueryBuilder('postOwner')
-      .leftJoinAndSelect('postOwner.posts', 'post')
-      .leftJoin('post.tagged_accounts', 'tagged_account')
-      .leftJoin('post.hashtags', 'hashtag')
-      .leftJoin('post.mentions', 'mention');
-
-    queryBuilder2 = await buildInfQuery(
-      filters,
-      queryBuilder2,
-      this.postOwner,
-      false,
-    );
-
     const totalCount = await queryBuilder.getCount();
 
     // Apply sorting
@@ -86,43 +71,25 @@ export class ScrapperService {
     queryBuilder.take(pageSize);
     queryBuilder.skip(pageSize * page);
 
-    let filteredPosts = await queryBuilder.getMany();
+    let owners = await queryBuilder.getMany();
+    const usernames = owners.map((o) => o.ownerUsername);
 
-    if (language) {
-      filteredPosts = filterByLanguage(filteredPosts, language);
-    }
-
-    const ownersIds = filteredPosts.map((owner) => owner.ownerUsername);
-
-    const posts = await queryBuilder
-      .andWhere('postOwner.ownerUsername IN (:...ownersIds)', { ownersIds })
-      .getRawMany();
-
-    let fullPosts = await queryBuilder2
-      .andWhere('postOwner.ownerUsername IN (:...ownersIds)', { ownersIds })
-      .getMany();
-
-    const count =
-      language || overallEngagement ? filteredPosts?.length : totalCount;
-
-    let response = posts.map((post) => {
-      const data = fullPosts.find(
-        (p) => post.postOwner_ownerUsername === p.ownerUsername,
-      );
-      const overall_engagement = post.engagement_rate;
-      return { ...data, overall_engagement };
+    let fullOwners = await this.postOwner.find({
+      where: { ownerUsername: In(usernames) },
+      relations: {
+        posts: { hashtags: true, mentions: true, tagged_accounts: true },
+      },
     });
 
-    if (overallEngagement) {
-      response = response.filter((res) => {
-        console.log(res.overall_engagement > +overallEngagement);
-        return res.overall_engagement > +overallEngagement * 1000;
-      });
+    if (language) {
+      fullOwners = filterByLanguage(owners, language);
     }
 
     return {
-      totalCount: count,
-      filteredPosts: response,
+      totalCount: totalCount,
+      filteredPosts: owners.map((owner) =>
+        fullOwners.find((f) => f.ownerUsername === owner.ownerUsername),
+      ),
     };
   }
 
